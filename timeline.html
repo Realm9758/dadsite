@@ -154,14 +154,19 @@
     .tl-card:hover .tl-photo { transform: scale(1.04); }
 
     @media (max-width: 640px) {
-      .tl-track::before { left: 20px; }
+      #timeline { padding: 36px 16px 60px; }
+      .tl-header h2 { font-size: 1.5rem; }
+      .tl-header { margin-bottom: 40px; }
+      .tl-track::before { left: 16px; }
       .tl-item, .tl-item.right {
         justify-content: flex-start;
-        padding-left: 52px;
+        padding-left: 44px;
         padding-right: 0;
-        transform: translateX(30px);
+        margin-bottom: 36px;
+        transform: translateX(20px);
       }
-      .tl-item::after { left: 20px; }
+      .tl-item::after { left: 16px; top: 50%; }
+      .tl-card { max-width: 100%; }
     }
   </style>
 </head>
