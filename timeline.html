@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Timeline</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0f0f1a;
+      font-family: 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    nav {
+      background: #16213e;
+      border-bottom: 1px solid #1e2d4a;
+      display: flex;
+      gap: 8px;
+      padding: 0 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    nav a {
+      color: #64748b;
+      text-decoration: none;
+      padding: 18px 20px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      border-bottom: 3px solid transparent;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    nav a:hover { color: #e2e8f0; }
+    nav a.active { color: #818cf8; border-bottom-color: #818cf8; }
+
+    /* ── Lightbox ── */
+    .lightbox {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.92);
+      z-index: 500;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .lightbox.open { opacity: 1; pointer-events: all; }
+    .lightbox img {
+      max-width: 90vw; max-height: 90vh;
+      border-radius: 12px;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.8);
+      transform: scale(0.92);
+      transition: transform 0.3s ease;
+    }
+    .lightbox.open img { transform: scale(1); }
+    .lb-close {
+      position: absolute; top: 24px; right: 28px;
+      color: #94a3b8; font-size: 2rem; cursor: pointer;
+      line-height: 1; transition: color 0.2s;
+    }
+    .lb-close:hover { color: #fff; }
+
+    /* ── Timeline ── */
+    #timeline { padding: 60px 24px 80px; }
+
+    .tl-header {
+      text-align: center;
+      margin-bottom: 64px;
+    }
+    .tl-header h2 {
+      font-family: 'Lora', serif;
+      font-size: 2rem; font-weight: 600;
+      color: #e2e8f0; letter-spacing: 0.04em;
+    }
+    .tl-header p {
+      margin-top: 10px; color: #475569;
+      font-size: 0.9rem; letter-spacing: 0.08em; text-transform: uppercase;
+    }
+
+    .tl-track {
+      position: relative;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .tl-track::before {
+      content: '';
+      position: absolute;
+      left: 50%; top: 0; bottom: 0;
+      width: 2px;
+      background: linear-gradient(to bottom, transparent, #2d3f60 8%, #2d3f60 92%, transparent);
+      transform: translateX(-50%);
+    }
+
+    .tl-item {
+      display: flex;
+      justify-content: flex-end;
+      padding-right: calc(50% + 40px);
+      margin-bottom: 64px;
+      position: relative;
+      opacity: 0;
+      transform: translateX(-40px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .tl-item.right {
+      justify-content: flex-start;
+      padding-right: 0;
+      padding-left: calc(50% + 40px);
+      transform: translateX(40px);
+    }
+    .tl-item.visible {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .tl-item::after {
+      content: '';
+      position: absolute;
+      left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: #818cf8;
+      box-shadow: 0 0 0 4px #1a2240, 0 0 16px rgba(129,140,248,0.5);
+      z-index: 2;
+    }
+
+    .tl-card {
+      background: #16213e;
+      border: 1px solid #1e2d4a;
+      border-radius: 16px;
+      overflow: hidden;
+      width: 100%;
+      max-width: 360px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+    }
+    .tl-card:hover {
+      transform: translateY(-4px) scale(1.02);
+      box-shadow: 0 16px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(129,140,248,0.3);
+    }
+
+    .tl-photo {
+      width: 100%;
+      aspect-ratio: 4/3;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.4s ease;
+    }
+    .tl-card:hover .tl-photo { transform: scale(1.04); }
+
+    @media (max-width: 640px) {
+      .tl-track::before { left: 20px; }
+      .tl-item, .tl-item.right {
+        justify-content: flex-start;
+        padding-left: 52px;
+        padding-right: 0;
+        transform: translateX(30px);
+      }
+      .tl-item::after { left: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
+    <span class="lb-close" onclick="closeLightbox()">✕</span>
+    <img id="lb-img" src="" alt="" />
+  </div>
+
+  <nav>
+    <a href="secret.html">Message</a>
+    <a href="timeline.html" class="active">Timeline</a>
+  </nav>
+
+  <div id="timeline">
+    <div class="tl-header">
+      <h2>Us Through The Years</h2>
+      <p>Click any photo to open it</p>
+    </div>
+
+    <div class="tl-track">
+
+      <div class="tl-item" data-delay="0">
+        <div class="tl-card" onclick="openLightbox('pictures/6FA96280-131D-4923-AE05-94CFC2AD5526_1_105_c.jpeg')">
+          <img class="tl-photo" src="pictures/6FA96280-131D-4923-AE05-94CFC2AD5526_1_105_c.jpeg" alt="" />
+        </div>
+      </div>
+
+      <div class="tl-item right" data-delay="100">
+        <div class="tl-card" onclick="openLightbox('pictures/CCE7DEB2-BA61-46F0-AA89-61A8AEA125A0_1_105_c.jpeg')">
+          <img class="tl-photo" src="pictures/CCE7DEB2-BA61-46F0-AA89-61A8AEA125A0_1_105_c.jpeg" alt="" />
+        </div>
+      </div>
+
+      <div class="tl-item" data-delay="150">
+        <div class="tl-card" onclick="openLightbox('pictures/6026B2EF-7912-4986-806C-7A7125E52F1B_1_105_c.jpeg')">
+          <img class="tl-photo" src="pictures/6026B2EF-7912-4986-806C-7A7125E52F1B_1_105_c.jpeg" alt="" />
+        </div>
+      </div>
+
+      <div class="tl-item right" data-delay="100">
+        <div class="tl-card" onclick="openLightbox('pictures/44855E56-80C2-4FC5-97EA-655DDC088CD7_1_105_c.jpeg')">
+          <img class="tl-photo" src="pictures/44855E56-80C2-4FC5-97EA-655DDC088CD7_1_105_c.jpeg" alt="" />
+        </div>
+      </div>
+
+      <div class="tl-item" data-delay="100">
+        <div class="tl-card" onclick="openLightbox('pictures/586C184B-35EE-40AE-8B88-F2133DA0D612_1_105_c.jpeg')">
+          <img class="tl-photo" src="pictures/586C184B-35EE-40AE-8B88-F2133DA0D612_1_105_c.jpeg" alt="" />
+        </div>
+      </div>
+
+      <div class="tl-item right" data-delay="100">
+        <div class="tl-card" onclick="openLightbox('pictures/6FC01CF2-B416-4D3A-8DD8-66F00844617A_1_105_c.jpeg')">
+          <img class="tl-photo" src="pictures/6FC01CF2-B416-4D3A-8DD8-66F00844617A_1_105_c.jpeg" alt="" />
+        </div>
+      </div>
+
+      <div class="tl-item" data-delay="100">
+        <div class="tl-card" onclick="openLightbox('pictures/3AFFC5C5-8767-4807-95B4-4A3FD4AB7E49_1_105_c.jpeg')">
+          <img class="tl-photo" src="pictures/3AFFC5C5-8767-4807-95B4-4A3FD4AB7E49_1_105_c.jpeg" alt="" />
+        </div>
+      </div>
+
+      <div class="tl-item right" data-delay="100">
+        <div class="tl-card" onclick="openLightbox('pictures/6717A5B0-47C7-4E70-8A40-B660CA7A511E_4_5005_c.jpeg')">
+          <img class="tl-photo" src="pictures/6717A5B0-47C7-4E70-8A40-B660CA7A511E_4_5005_c.jpeg" alt="" />
+        </div>
+      </div>
+
+      <div class="tl-item" data-delay="100">
+        <div class="tl-card" onclick="openLightbox('pictures/0BDE7A90-8859-4B2C-BD8C-A2723F511C79_1_105_c.jpeg')">
+          <img class="tl-photo" src="pictures/0BDE7A90-8859-4B2C-BD8C-A2723F511C79_1_105_c.jpeg" alt="" />
+        </div>
+      </div>
+
+      <div class="tl-item right" data-delay="100">
+        <div class="tl-card" onclick="openLightbox('pictures/8456D920-FAC6-432B-8524-311280FCD72C_1_105_c.jpeg')">
+          <img class="tl-photo" src="pictures/8456D920-FAC6-432B-8524-311280FCD72C_1_105_c.jpeg" alt="" />
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    function openLightbox(src) {
+      const lb = document.getElementById('lightbox');
+      document.getElementById('lb-img').src = src;
+      lb.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeLightbox(e) {
+      if (e && e.target !== document.getElementById('lightbox') && !e.target.classList.contains('lb-close')) return;
+      document.getElementById('lightbox').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') { document.getElementById('lightbox').classList.remove('open'); document.body.style.overflow = ''; }
+    });
+
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          setTimeout(() => e.target.classList.add('visible'), parseInt(e.target.dataset.delay || 0));
+          obs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    document.querySelectorAll('.tl-item').forEach(i => obs.observe(i));
+  </script>
+</body>
+</html>
